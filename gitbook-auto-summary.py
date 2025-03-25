@@ -60,21 +60,28 @@ def mdfile_in_dir(dire):
     return False
 
 
-def markdown_title_name(dire, base_dir,filename):
+def markdown_title_name(dire, base_dir, filename):
     path_filename = os.path.join(os.path.relpath(dire, base_dir), filename)
-    with open(path_filename) as f:
-        firstline = f.readline().rstrip()
+    try:
+        # Explicitly specify UTF-8 encoding when opening the file
+        with open(path_filename, encoding='utf-8') as f:
+            firstline = f.readline().rstrip()
+    except FileNotFoundError:
+        print(f"File {path_filename} not found")
+        return filename.split('.', 1)[0]
+    except UnicodeDecodeError:
+        print(f"Failed to decode file {path_filename} using UTF-8 encoding.")
+        return filename.split('.', 1)[0]
 
-    #if not firstline.isalnum():
     if firstline == '' or firstline == '---':
-      title = filename.split('.',1)[0]
+        title = filename.split('.', 1)[0]
     else:
-      title = firstline.lower().strip()
-      for i in range(0, len(title)):
-        if not title[i].isalnum():
-           title = title[0:i] + ' ' + title[i+1:]
-      while '--' in title:
-         title = title.replace('--', ' ')
+        title = firstline.lower().strip()
+        for i in range(0, len(title)):
+            if not title[i].isalnum():
+                title = title[0:i] + ' ' + title[i + 1:]
+        while '--' in title:
+            title = title.replace('--', ' ')
     title = title.strip(' ')
     return title
 
@@ -152,7 +159,7 @@ def main():
         print(os.listdir(dir_input))
         print('--append', end = ' ')
         global former_summary_list
-        with open(os.path.join(dir_input, 'SUMMARY.md')) as f:
+        with open(os.path.join(dir_input, 'SUMMARY.md'), encoding='utf-8') as f:
             former_summary_list = f.readlines()
             f.close()
     print()
@@ -163,7 +170,7 @@ def main():
         filename = 'SUMMARY-GitBook-auto-summary.md'
     else:
         filename = 'SUMMARY.md'
-    output = open(os.path.join(dir_input, filename), 'w')
+    output = open(os.path.join(dir_input, filename), 'w', encoding='utf-8')
     output.write('# Summary\n\n')
     output_markdown(dir_input, dir_input, output, append)
 
